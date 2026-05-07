@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise Risk Assessment Tool</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
+  <script src="js/data.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>RiskGuard</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-page="register">
+        <i class="fa-solid fa-list-check"></i><span>Risk Register</span>
+      </a>
+      <a href="#" class="nav-item" data-page="matrix">
+        <i class="fa-solid fa-table-cells"></i><span>Heat Map</span>
+      </a>
+      <a href="#" class="nav-item" data-page="analytics">
+        <i class="fa-solid fa-chart-pie"></i><span>Analytics</span>
+      </a>
+      <a href="#" class="nav-item" data-page="controls">
+        <i class="fa-solid fa-sliders"></i><span>Controls</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">CRO</div>
+        <div>
+          <div class="user-name">Chief Risk Officer</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-wrap">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="breadcrumb" id="breadcrumb">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="globalSearch" placeholder="Search risks…" oninput="handleSearch(this.value)" />
+        </div>
+        <button class="btn-icon" title="Export CSV" onclick="exportCSV()">
+          <i class="fa-solid fa-download"></i>
+        </button>
+        <button class="btn-primary-top" onclick="openModal()">
+          <i class="fa-solid fa-plus"></i> Add Risk
+        </button>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <main class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h1>Risk Overview</h1>
+          <p>Real-time organizational risk intelligence</p>
+        </div>
+
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div class="dash-grid">
+          <div class="card chart-card">
+            <div class="card-header">
+              <span class="card-title">Risk by Severity</span>
+            </div>
+            <div class="chart-wrap" style="height:240px;">
+              <canvas id="sevDonut" aria-label="Severity donut chart"></canvas>
+            </div>
+          </div>
+          <div class="card chart-card">
+            <div class="card-header">
+              <span class="card-title">Risks by Category</span>
+            </div>
+            <div class="chart-wrap" style="height:240px;">
+              <canvas id="catBar" aria-label="Category bar chart"></canvas>
+            </div>
+          </div>
+          <div class="card recent-card">
+            <div class="card-header">
+              <span class="card-title">Recent Risks</span>
+              <a href="#" class="view-all" onclick="switchPage('register')">View all</a>
+            </div>
+            <div id="recentList"></div>
+          </div>
+          <div class="card trend-card">
+            <div class="card-header">
+              <span class="card-title">Status Breakdown</span>
+            </div>
+            <div id="statusBreakdown"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== RISK REGISTER ===== -->
+      <section class="page" id="page-register">
+        <div class="page-header">
+          <h1>Risk Register</h1>
+          <p>Full log of identified organizational risks</p>
+        </div>
+        <div class="filter-bar">
+          <select id="fSev" onchange="renderRegister()">
+            <option value="">All Severity</option>
+            <option>Critical</option><option>High</option>
+            <option>Medium</option><option>Low</option>
+          </select>
+          <select id="fStat" onchange="renderRegister()">
+            <option value="">All Status</option>
+            <option>Open</option><option>Mitigating</option>
+            <option>Monitoring</option><option>Resolved</option>
+          </select>
+          <select id="fCat" onchange="renderRegister()">
+            <option value="">All Categories</option>
+            <option>Operational</option><option>Financial</option>
+            <option>Compliance</option><option>Cybersecurity</option>
+            <option>Strategic</option><option>Reputational</option><option>Legal</option>
+          </select>
+          <select id="fDept" onchange="renderRegister()">
+            <option value="">All Departments</option>
+            <option>IT</option><option>Finance</option><option>HR</option>
+            <option>Legal</option><option>Operations</option>
+            <option>Marketing</option><option>Supply Chain</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="risk-table">
+            <thead>
+              <tr>
+                <th onclick="sortBy('title')">Risk <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortBy('category')">Category <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortBy('dept')">Department <i class="fa-solid fa-sort"></i></th>
+                <th onclick="sortBy('score')">Score <i class="fa-solid fa-sort"></i></th>
+                <th>Severity</th>
+                <th onclick="sortBy('status')">Status <i class="fa-solid fa-sort"></i></th>
+                <th>Owner</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="registerBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </section>
+
+      <!-- ===== HEAT MAP ===== -->
+      <section class="page" id="page-matrix">
+        <div class="page-header">
+          <h1>Risk Heat Map</h1>
+          <p>5×5 likelihood vs impact matrix</p>
+        </div>
+        <div class="matrix-layout">
+          <div class="matrix-container">
+            <div class="matrix-y-axis">
+              <span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>
+            </div>
+            <div>
+              <div class="matrix-grid" id="heatMatrix"></div>
+              <div class="matrix-x-axis">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+              </div>
+              <div class="axis-labels">
+                <span class="y-label">← Likelihood</span>
+                <span class="x-label">Impact →</span>
+              </div>
+            </div>
+          </div>
+          <div class="matrix-legend">
+            <h3>Legend</h3>
+            <div class="legend-item"><span class="leg-swatch critical"></span>Critical (20–25)</div>
+            <div class="legend-item"><span class="leg-swatch high"></span>High (12–19)</div>
+            <div class="legend-item"><span class="leg-swatch medium"></span>Medium (6–11)</div>
+            <div class="legend-item"><span class="leg-swatch low"></span>Low (1–5)</div>
+            <h3 style="margin-top:1.5rem;">Risks at Selected Cell</h3>
+            <div id="cellDetail" class="cell-detail-empty">Click a cell to see risks</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ANALYTICS ===== -->
+      <section class="page" id="page-analytics">
+        <div class="page-header">
+          <h1>Analytics</h1>
+          <p>Deep-dive into risk patterns and trends</p>
+        </div>
+        <div class="analytics-grid">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Risk Score by Department</span></div>
+            <div class="chart-wrap" id="deptWrap" style="height:260px;">
+              <canvas id="deptChart" aria-label="Department risk chart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Likelihood vs Impact Scatter</span></div>
+            <div class="chart-wrap" style="height:260px;">
+              <canvas id="scatterChart" aria-label="Scatter chart"></canvas>
+            </div>
+          </div>
+          <div class="card full-width-card">
+            <div class="card-header"><span class="card-title">Risk Count by Category & Severity</span></div>
+            <div class="chart-wrap" style="height:260px;">
+              <canvas id="stackedBar" aria-label="Stacked bar chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CONTROLS ===== -->
+      <section class="page" id="page-controls">
+        <div class="page-header">
+          <h1>Risk Controls</h1>
+          <p>Mitigation actions and control effectiveness</p>
+        </div>
+        <div id="controlsList"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===== MODAL ===== -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Risk</h2>
+        <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId" value="" />
+        <div class="form-grid">
+          <div class="form-field full">
+            <label>Risk Title *</label>
+            <input type="text" id="fTitle" placeholder="Describe the risk…" />
+          </div>
+          <div class="form-field">
+            <label>Category *</label>
+            <select id="fCategory">
+              <option>Operational</option><option>Financial</option>
+              <option>Compliance</option><option>Cybersecurity</option>
+              <option>Strategic</option><option>Reputational</option><option>Legal</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Department</label>
+            <select id="fDept">
+              <option>IT</option><option>Finance</option><option>HR</option>
+              <option>Legal</option><option>Operations</option>
+              <option>Marketing</option><option>Supply Chain</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Likelihood (1–5): <strong id="likeVal">3</strong></label>
+            <input type="range" min="1" max="5" value="3" id="fLikelihood"
+              oninput="document.getElementById('likeVal').textContent=this.value; updateScore()" />
+          </div>
+          <div class="form-field">
+            <label>Impact (1–5): <strong id="impVal">3</strong></label>
+            <input type="range" min="1" max="5" value="3" id="fImpact"
+              oninput="document.getElementById('impVal').textContent=this.value; updateScore()" />
+          </div>
+          <div class="form-field">
+            <label>Status</label>
+            <select id="fStatus">
+              <option>Open</option><option>Mitigating</option>
+              <option>Monitoring</option><option>Resolved</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Risk Owner</label>
+            <input type="text" id="fOwner" placeholder="Name" />
+          </div>
+          <div class="form-field full">
+            <label>Description</label>
+            <textarea id="fDesc" rows="3" placeholder="Describe the risk context and potential impact…"></textarea>
+          </div>
+          <div class="form-field full">
+            <label>Mitigation Plan</label>
+            <textarea id="fMitigation" rows="2" placeholder="Steps to reduce or eliminate this risk…"></textarea>
+          </div>
+        </div>
+        <div class="score-preview" id="scorePreview">
+          Risk Score: <strong id="scoreVal">9</strong> &mdash; <span id="scoreLabel">Medium</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary-top" onclick="saveRisk()">Save Risk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</body>
+</html>
